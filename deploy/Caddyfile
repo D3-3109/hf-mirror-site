@@ -8,6 +8,8 @@
 #  3. 访问日志输出到 stdout（容器友好，交给 docker logs 收集）。
 #  4. 删除 X-Api-Key 注入（那是原作者给自家用户共享 token 的用法，自部署无意义）。
 #  5. Xet 数据面引导为可选高级配置（见 xet.Caddyfile，默认注释）。
+#  6. 扫描器诱饵路径（顶层点文件、伪目录 .env、WordPress/后门探测词）本地
+#     404 拦截，不回源——避免扫描流量烧掉镜像上游的 429 限流配额。
 #
 # 默认行为（与线上 hf-mirror.com 早期行为一致）：
 #   控制面（API/页面）全部经本镜像反代；大文件 302 到 us.aws.cdn.hf.co 由客户端
@@ -29,6 +31,13 @@
 	@badbots expression header({'User-Agent': '*SemrushBot*', 'User-Agent': '*MJ12bot*'})
 	handle @badbots {
 		respond 403
+	}
+
+	# 扫描器诱饵：只拦顶层点文件与第二段伪目录形式。合法仓库文件路径
+	# /<org>/<repo>/resolve/main/.env 等不受影响（点文件在第三段及以后）。
+	@scanner_bait path_regexp ^/\.|^/[^/]+/\.(env|git|aws|svn|htaccess|htpasswd)|^/(env|wp-admin|wp-login\.php|xmlrpc\.php|phpmyadmin|pma|adminer|actuator)(/|$)
+	handle @scanner_bait {
+		respond 404
 	}
 
 	@asset-paths expression path('/api/event', '/front/*', '/avatars/*') || path_regexp('\\.(js|css|png|jpe?g|gif|ico|woff|otf|ttf|eot|svg|txt|pdf|docx?|xlsx?)$')
