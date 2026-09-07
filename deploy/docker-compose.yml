@@ -1,0 +1,23 @@
+services:
+  hf-mirror:
+    image: ghcr.io/d3-3109/hf-mirror-caddy:latest
+    container_name: hf-mirror
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      MIRROR_HOST: ${MIRROR_HOST}
+      CF_TOKEN: ${CF_TOKEN:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # 启用 xet.Caddyfile 时取消下一行注释，并在 Caddyfile 顶部加
+      # “import /etc/caddy/xet.Caddyfile”
+      # - ./xet.Caddyfile:/etc/caddy/xet.Caddyfile:ro
+      - caddy_data:/data # 证书
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

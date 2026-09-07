@@ -1,0 +1,147 @@
+# hf-mirror-site 自部署 Caddyfile（基于 scripts/caddy/hf-mirror.com.Caddyfile 修订）
+#
+# 相对上游仓库的修订：
+#  1. 删除 cdn-lfs 相关改写与 lfs.hf-mirror.com.Caddyfile —— HuggingFace 已退役
+#     cdn-lfs（实测连 bert 等老 LFS 仓库的 resolve 302 也指向 us.aws.cdn.hf.co 的
+#     xet-bridge），该配置已成为死代码。
+#  2. Referer 防盗链正则参数化（原文件硬编码 hf-mirror.com）。
+#  3. 访问日志输出到 stdout（容器友好，交给 docker logs 收集）。
+#  4. 删除 X-Api-Key 注入（那是原作者给自家用户共享 token 的用法，自部署无意义）。
+#  5. Xet 数据面引导为可选高级配置（见 xet.Caddyfile，默认注释）。
+#
+# 默认行为（与线上 hf-mirror.com 早期行为一致）：
+#   控制面（API/页面）全部经本镜像反代；大文件 302 到 us.aws.cdn.hf.co 由客户端
+#   直连（该域名目前在国内未被严重劣化，实测可用）。
+
+{
+	order replace after encode
+	email admin@{$MIRROR_HOST}
+	# 启用泛域名证书（xet.Caddyfile 需要）时取消注释：
+	# acme_dns cloudflare {$CF_TOKEN}
+}
+
+{$MIRROR_HOST} {
+	log {
+		output stdout
+		format console
+	}
+
+	@badbots expression header({'User-Agent': '*SemrushBot*', 'User-Agent': '*MJ12bot*'})
+	handle @badbots {
+		respond 403
+	}
+
+	@asset-paths expression path('/api/event', '/front/*', '/avatars/*') || path_regexp('\\.(js|css|png|jpe?g|gif|ico|woff|otf|ttf|eot|svg|txt|pdf|docx?|xlsx?)$')
+	skip_log @asset-paths
+
+	encode zstd gzip
+
+	header Server hf-mirror
+
+	@static path / /favicon.ico /logo.svg /invalid_referer.html /login_error.html /scripts.js /styles.css /robots.txt /direct-links.js
+	handle @static {
+		root * /srv/www
+		file_server
+		header Cache-Control "no-cache"
+	}
+
+	# 换 logo 区分原站
+	rewrite /front/assets/huggingface_logo-noborder.svg /logo.svg
+	# 原站前端静态资源缓存 3 天
+	header /front/* Cache-Control "public, max-age=259200"
+
+	# 吞掉前端埋点
+	handle /api/event {
+		respond "OK"
+		skip_log
+	}
+	handle /cdn-cgi/rum {
+		respond 204
+		skip_log
+	}
+
+	# 模型文件链接不缓存
+	@model_path path_regexp .*/resolve/main/.*
+	header @model_path Cache-Control no-cache
+
+	# 防盗链：允许无 Referer 的 API 客户端，拒绝第三方站点外链 /resolve/ 直链
+	@invalid_referer {
+		path_regexp .*/resolve/main/.*
+		not header !Referer
+		not header_regexp Referer ^https?://([a-z0-9-]+\.)?{$MIRROR_HOST}(/|$)
+	}
+	rewrite @invalid_referer /invalid_referer.html
+
+	# 合规屏蔽
+	@illegal path_regexp /.*([xX][jJ][pP]|[Xx][Ii][Jj][Ii][Nn]|[Jj][Ii][Nn][Pp][Ii][Nn]).*
+	handle @illegal {
+		respond "invalid request" 403
+	}
+
+	# 镜像站禁止登录
+	@auth path /login /join
+	rewrite @auth /login_error.html
+
+	# ---- 高级(可选)：把 hf_xet 客户端的 CAS 端点引导到本镜像 ----
+	# 与 xet.Caddyfile 配套使用，取消注释前先读该文件头部说明。
+	#@xet_token path_regexp /api/.*/xet-read-token/.*
+	#handle @xet_token {
+	#	replace stream {
+	#		"casUrl":"https://cas-server.xethub.hf.co" "casUrl":"https://{$XETCAS_HOST}"
+	#	}
+	#	reverse_proxy https://huggingface.co {
+	#		header_up Accept-Encoding identity
+	#		header_up Host {upstream_hostport}
+	#	}
+	#}
+
+	# 前端主 bundle：替换品牌名
+	handle /front/build/kube-*/index.js {
+		replace stream {
+			"Hugging Face" "HF Mirror"
+		}
+		reverse_proxy https://huggingface.co {
+			header_up Accept-Encoding identity
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	# 项目页：替换站内链接与品牌名，保持闭环
+	@project_page expression path_regexp('^/[^/]+/[^/]+/?$') || path_regexp('^/datasets/[^/]+/[^/]+/?$') || path_regexp('^/spaces/[^/]+/[^/]+/?$') || path_regexp('.*/tree/main/?$')
+	handle @project_page {
+		replace stream {
+			https://huggingface.co https://{$MIRROR_HOST}
+			"Hugging Face" "HF Mirror"
+		}
+		reverse_proxy https://huggingface.co {
+			header_up Accept-Encoding identity
+			header_up Host {upstream_hostport}
+		}
+	}
+
+	# /models、/datasets 列表页与 /docs 文档页：注入直连检测脚本。
+	# 探测到用户可直连 huggingface.co 时，仓库卡片与 /docs/* 链接改指原站，
+	# 后续浏览流量绕过镜像，避免镜像出口 IP 被 HF 限流（429）。
+	@inject_direct path /models /models/* /datasets /datasets/* /docs /docs/*
+	handle @inject_direct {
+		replace stream {
+			"</body>" "<script src=\"/direct-links.js\" defer></script></body>"
+		}
+		reverse_proxy https://huggingface.co {
+			header_up Accept-Encoding identity
+			header_up Host {upstream_hostport}
+			header_down Location huggingface\.co {$MIRROR_HOST}
+		}
+	}
+
+	# 其余全部反代 huggingface.co
+	handle {
+		reverse_proxy https://huggingface.co {
+			header_up Host {upstream_hostport}
+			# Xet 时代大文件 302 目标；默认不改写（客户端直连 us.aws.cdn.hf.co）。
+			# 要收拢到镜像时取消下一行注释（需启用 xet.Caddyfile，.env 设置 XETCDN_HOST）：
+			# header_down Location us\.aws\.cdn\.hf\.co {$XETCDN_HOST}
+			header_down Location huggingface\.co {$MIRROR_HOST}
+		}
+	}
+}

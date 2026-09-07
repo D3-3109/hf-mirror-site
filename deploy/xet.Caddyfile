@@ -1,0 +1,50 @@
+# 可选高级配置：把 Xet 数据面也收拢到本镜像（实验性）
+#
+# 背景（2026 实测）：
+#   - 无 hf_xet 客户端：resolve 302 → us.aws.cdn.hf.co/xet-bridge-*(CloudFront，
+#     返回重组后的完整文件字节，支持 Range)
+#   - hf_xet 客户端：hub API 的 /xet-read-token 响应 JSON 里的 casUrl 告诉客户端
+#     去 cas-server.xethub.hf.co 拿 chunk 重建计划，再从 transfer.xethub.hf.co 的
+#     预签名 URL 拉 xorb chunk。
+#
+# 启用步骤：
+#   1. .env 里设置 XETCDN_HOST / XETCAS_HOST / XETDL_HOST 三个变量
+#      （用扁平二级子域，如 hfcdn.northstar.cool —— 泛域名证书 *.northstar.cool
+#       只匹配一层，盖不住 hfcdn.hf.northstar.cool 这类三段子域）
+#   2. DNS 加 hfcdn/hf-cas/hf-xetdl 三条 A 记录指向本机（提前加好，见 .env.example）
+#   3. 证书：默认走 HTTP-01（每域一张，Caddy 自动管理，无需泛域名）；
+#      若 80 端口不可用或想要单张泛域名证书，把 NS 托管到 Cloudflare，
+#      在主 Caddyfile 全局块取消 acme_dns 注释并填 CF_TOKEN
+#   4. 主 Caddyfile 取消两处注释：
+#      - handle 块里 header_down Location us\.aws\.cdn\.hf\.co {$XETCDN_HOST}
+#      - @xet_token 的 handle 块（改写 xet-read-token JSON 里的 casUrl）
+#   5. docker-compose.yml 取消挂载本文件的注释，并在主 Caddyfile 顶部加：
+#      import /etc/caddy/xet.Caddyfile
+#
+# 注意：CloudFront 预签名 URL 的 Policy 绑定的是原始域名路径，代理时用
+# header_up Host {upstream_hostport} 还原 Host 后签名校验才可通过。
+
+{$XETCDN_HOST} {
+	# xet-bridge 整文件下载（HF_HUB_DISABLE_XET=1 或未装 hf-xet 的客户端走这）
+	reverse_proxy https://us.aws.cdn.hf.co {
+		header_up Host {upstream_hostport}
+	}
+}
+
+{$XETCAS_HOST} {
+	# CAS 重建 API；响应 JSON 里的 transfer 预签名 URL 同步改写到本镜像
+	replace stream {
+		"https://transfer.xethub.hf.co" "https://{$XETDL_HOST}"
+	}
+	reverse_proxy https://cas-server.xethub.hf.co {
+		header_up Host {upstream_hostport}
+		header_up Accept-Encoding identity
+	}
+}
+
+{$XETDL_HOST} {
+	# xorb chunk 数据面（CloudFront 预签名 URL）
+	reverse_proxy https://transfer.xethub.hf.co {
+		header_up Host {upstream_hostport}
+	}
+}

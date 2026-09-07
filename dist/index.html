@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HF-Mirror - Huggingface 镜像站</title>
+    <meta name="description" content="加速访问Hugging Face的门户。作为一个公益项目，我们致力于提供稳定、快速的镜像服务，帮助国内用户无障碍访问Hugging Face的资源。" />
+    <meta name="color-scheme" content="light dark">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="top">
+            <h1><a href="/" class="header-link"><span class="logo-mark">🤗</span>Hugging Face 镜像站</a></h1>
+            <div class="search-box">
+                <input type="text" class="search-input" placeholder="搜索模型、数据集…" id="searchKeyword"
+                    autocomplete="off" aria-label="搜索模型、数据集">
+                <svg class="search-svg" aria-hidden="true" focusable="false" role="img" width="1em" height="1em"
+                    preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
+                    <path d="M30 28.59L22.45 21A11 11 0 1 0 21 22.45L28.59 30zM5 14a9 9 0 1 1 9 9a9 9 0 0 1-9-9z"
+                        fill="currentColor"></path>
+                </svg>
+                <div class="search-results" id="searchResults" style="display:none;"></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="rankings">
+            <div class="rankings-header">
+                <h2>热门排行 🔥</h2>
+            </div>
+
+            <div class="tabs" role="tablist">
+                <div class="tab" data-type="all" role="tab">全部</div>
+                <div class="tab" data-type="model" role="tab">模型</div>
+                <div class="tab" data-type="dataset" role="tab">数据集</div>
+            </div>
+            <div id="trendingItems" class="trending-items"></div>
+            <div class="button-link-container">
+                <button id="toggleButton" class="toggle-button">展开</button>
+                <a href="/models" id="moreItems" class="more-items">更多 »</a>
+            </div>
+        </section>
+
+        <section class="tutorial">
+            <div class="tutorial-header">
+                <h2>如何使用镜像站 🌟</h2>
+            </div>
+            <div class="instructions">
+                <blockquote>本站域名
+                    <a href="https://hf-mirror.com" target="_blank" rel="noopener">hf-mirror.com</a>，用于镜像
+                    <a href="https://huggingface.co" target="_blank" rel="noopener">huggingface.co</a>
+                    域名。作为一个公益镜像站点，致力于帮助国内AI开发者快速、稳定地下载模型、数据集。
+                </blockquote>
+
+                更多详细用法请看<b><a
+                        href="https://hf-mirror.com/docs/huggingface_hub/guides/download">官方下载指南</a></b>。
+
+                <h3>方法一：网页下载</h3>
+                <p>在本站搜索，并在模型主页的<code>Files and Version</code>中下载文件。</p>
+                <h3>方法二：hf 命令行工具</h3>
+                <p><a
+                        href="https://hf-mirror.com/docs/huggingface_hub/guides/cli"><code>hf</code>
+                    </a>是 Hugging Face 官方提供的命令行工具（原 <code>huggingface-cli</code>，2025 年起统一更名为
+                <code>hf</code>），自带完善的下载功能。</p>
+                <b>1. 安装</b><br>
+                <pre
+                    class="code-sample"><code>pip install -U huggingface_hub</code><button onclick="copyCode(this)">Copy</button></pre>
+                也可以用官方独立安装脚本（macOS/Linux）：<code>curl -LsSf https://hf.co/cli/install.sh | bash</code>，或
+                <code>brew install hf</code>。
+                <br><b>2. 设置环境变量</b>
+                <br><i>Linux</i>
+                <pre
+                    class="code-sample"><code>export HF_ENDPOINT=https://hf-mirror.com</code><button onclick="copyCode(this)">Copy</button></pre>
+                <i>Windows Powershell</i>
+                <pre
+                class="code-sample"><code>$env:HF_ENDPOINT = "https://hf-mirror.com"</code><button onclick="copyCode(this)">Copy</button></pre>
+                建议将上面这一行写入 <code>~/.bashrc</code>。
+                <br><b>3.1 下载模型</b>
+                <pre
+                    class="code-sample"><code>hf download gpt2 --local-dir gpt2</code><button onclick="copyCode(this)">Copy</button></pre>
+                <b>3.2 下载数据集</b>
+                <pre
+                    class="code-sample"><code>hf download wikitext --repo-type dataset --local-dir wikitext</code><button onclick="copyCode(this)">Copy</button></pre>
+                也可以只下载指定文件：<code>hf download gpt2 config.json model.safetensors</code>。断点续传自动进行，无需额外参数；<code>--local-dir</code>
+                下载的即是普通文件，无软链接。
+                <h3>方法三：使用环境变量（非侵入式）</h3>
+                <p>非侵入式，能解决大部分情况。huggingface 工具链会获取<code>HF_ENDPOINT</code>环境变量来确定下载文件所用的网址，所以可以使用通过设置变量来解决。
+                <pre class="code-sample"><code>HF_ENDPOINT=https://hf-mirror.com python your_script.py</code><button onclick="copyCode(this)">Copy</button>
+                </pre>
+                不过有些数据集有内置的下载脚本，那就需要手动改一下脚本内的地址来实现了。
+                </p>
+                <div class="QA">
+                    <h2 class="QA">常见问题</h2>
+                    <h3>Q: 有些项目需要登录，如何下载？</h3>
+                    <p>
+                        <b>A</b>：部分 Gated Repo 需登录申请许可。为保障账号安全，本站不支持登录，需先前往 Hugging Face 官网登录、申请许可，在<a
+                            href="https://huggingface.co/settings/tokens" rel="noopener">官网这里获取 Access
+                            Token</a> 后回镜像站用命令行下载。<br>部分工具下载
+                        Gated Repo 的方法：
+                    </p>
+                    <b>hf download： 添加<code>--token</code>参数</b>
+                    <pre class="code-sample"><code>hf download meta-llama/Llama-3.2-1B-Instruct --token hf_*** --local-dir llama</code><button onclick="copyCode(this)">Copy</button></pre>
+                    也可以先执行 <code>hf auth login --token hf_***</code> 登录一次，或设置 <code>HF_TOKEN</code> 环境变量。其余如<code>from_pretrained</code>、<code>wget</code>、<code>curl</code>如何设置认证 token，详见上面提到的官方下载指南。
+                </div>
+            </div>
+
+
+    </section>
+
+    </main>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>
