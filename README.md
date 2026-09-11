@@ -50,6 +50,12 @@ Caddy 自动 HTTP-01 出证。`docker login ghcr.io`（PAT 勾 `read:packages`�
 更新：`git pull && docker compose pull && docker compose up -d`。
 Caddyfile 是 bind mount，单独改它只需 `docker compose restart`。
 
+### Cloudflare Workers 版（可选）
+
+[worker/](worker/README.md) 是等价的 Workers 实现：同样只代理控制面，
+数据面 302 直连不变；VPS/Docker 换成一个 `wrangler deploy`。
+上线前先按其 README 里的 PoC 清单验证大陆访问质量与 HF 侧 429/WAF 行为。
+
 ```
 ├── dist/                # 静态站点（首页、错误页、direct-links.js）
 ├── deploy/

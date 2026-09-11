@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hf-mirror",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  // Workers Logs（对应 Caddy 的 stdout 日志）
+  "observability": {
+    "enabled": true
+  },
+  // dist/ 静态站点（首页/错误页/direct-links.js），请求免费不计费。
+  // run_worker_first：所有请求先进 Worker，由代码决定走静态还是反代，
+  // 以便对静态文件施加与 Caddy 一致的 Cache-Control: no-cache。
+  "assets": {
+    "directory": "../dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  // 可选：固定镜像主域名（Location 改写/防盗链用）。
+  // 留空则动态取请求 Host，任意域名零维护。
+  // "vars": { "MIRROR_HOST": "hf-cf.northstar.cool" },
+  // 生产域名：zone northstar.cool 在同一 CF 账号，custom_domain 自动建
+  // DNS 记录并出证。
+  "routes": [{ "pattern": "hf-cf.northstar.cool", "custom_domain": true }],
+  "workers_dev": true
+}

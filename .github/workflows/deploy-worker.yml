@@ -1,0 +1,24 @@
+# 部署 Cloudflare Worker。
+# 前置：repo secrets 配置 CLOUDFLARE_API_TOKEN
+#（权限：Account → Workers Scripts:Edit；Zone → Workers Routes:Edit），
+# 并在 worker/wrangler.jsonc 里配置 routes 自定义域名。
+name: Deploy Worker
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "worker/**"
+      - "dist/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: worker
