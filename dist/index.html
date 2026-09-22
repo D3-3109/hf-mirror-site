@@ -4,115 +4,206 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HF-Mirror - Huggingface 镜像站</title>
-    <meta name="description" content="加速访问Hugging Face的门户。作为一个公益项目，我们致力于提供稳定、快速的镜像服务，帮助国内用户无障碍访问Hugging Face的资源。" />
+    <title>HF-Mirror - Hugging Face 镜像站</title>
+    <meta name="description" content="加速访问 Hugging Face 的公益镜像站。帮助国内 AI 开发者高速、稳定地下载模型与数据集。" />
     <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#fbfbfc" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+    <meta property="og:title" content="HF-Mirror - Hugging Face 镜像站">
+    <meta property="og:description" content="高速、稳定地下载 Hugging Face 模型与数据集。">
     <link rel="icon" href="/favicon.ico">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <header class="site-header">
+    <header class="site-header" id="siteHeader">
         <div class="top">
-            <h1><a href="/" class="header-link"><span class="logo-mark">🤗</span>Hugging Face 镜像站</a></h1>
-            <div class="search-box">
-                <input type="text" class="search-input" placeholder="搜索模型、数据集…" id="searchKeyword"
-                    autocomplete="off" aria-label="搜索模型、数据集">
-                <svg class="search-svg" aria-hidden="true" focusable="false" role="img" width="1em" height="1em"
+            <a href="/" class="brand header-link" aria-label="返回首页">
+                <span class="logo-mark" aria-hidden="true">🤗</span>
+                <span class="brand-name">HF-Mirror</span>
+                <span class="brand-badge">镜像站</span>
+            </a>
+            <nav class="site-nav" aria-label="站点导航">
+                <a href="/models">模型</a>
+                <a href="/datasets">数据集</a>
+                <a class="nav-docs" href="/docs/huggingface_hub/guides/download">下载指南</a>
+                <a class="nav-external" href="https://huggingface.co" target="_blank" rel="noopener">官方站
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="7" y1="17" x2="17" y2="7" />
+                        <polyline points="7 7 17 7 17 17" />
+                    </svg>
+                </a>
+                <a class="nav-github" href="https://github.com/D3-3109/hf-mirror-site" target="_blank"
+                    rel="noopener" aria-label="GitHub 仓库">
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 16 16" fill="currentColor">
+                        <path
+                            d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z" />
+                    </svg>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <!-- Hero：渐变光晕 + 居中大搜索 -->
+        <section class="hero">
+            <div class="hero-glow" aria-hidden="true"></div>
+            <p class="hero-eyebrow">开源公益镜像 · 数据面 CDN 直连加速</p>
+            <h1 class="hero-title">更快地访问 <span class="grad-text">Hugging&nbsp;Face</span></h1>
+            <p class="hero-sub">高速、稳定地下载模型与数据集。设置一个环境变量，<code>hf</code> CLI、transformers、diffusers
+                即可无缝切换到本站。</p>
+            <div class="search-box hero-search">
+                <svg class="search-svg" aria-hidden="true" focusable="false" width="1em" height="1em"
                     preserveAspectRatio="xMidYMid meet" viewBox="0 0 32 32">
                     <path d="M30 28.59L22.45 21A11 11 0 1 0 21 22.45L28.59 30zM5 14a9 9 0 1 1 9 9a9 9 0 0 1-9-9z"
                         fill="currentColor"></path>
                 </svg>
+                <input type="text" class="search-input" placeholder="搜索模型、数据集，如 qwen、llama…" id="searchKeyword"
+                    autocomplete="off" aria-label="搜索模型、数据集">
+                <kbd class="search-kbd" aria-hidden="true">/</kbd>
                 <div class="search-results" id="searchResults" style="display:none;"></div>
             </div>
-        </div>
-    </header>
-
-    <main class="container">
-        <section class="rankings">
-            <div class="rankings-header">
-                <h2>热门排行 🔥</h2>
+            <div class="hero-tags" aria-label="热门搜索">
+                <span class="hero-tags-label">热门：</span>
+                <button type="button" data-q="deepseek-ai">DeepSeek</button>
+                <button type="button" data-q="Qwen">Qwen</button>
+                <button type="button" data-q="llama">Llama</button>
+                <button type="button" data-q="FLUX">FLUX</button>
+                <button type="button" data-q="whisper">Whisper</button>
             </div>
+        </section>
 
-            <div class="tabs" role="tablist">
-                <div class="tab" data-type="all" role="tab">全部</div>
-                <div class="tab" data-type="model" role="tab">模型</div>
-                <div class="tab" data-type="dataset" role="tab">数据集</div>
+        <!-- 热门排行 -->
+        <section class="container rankings">
+            <div class="rankings-header">
+                <h2>热门排行</h2>
+                <div class="tabs" role="tablist">
+                    <div class="tab" data-type="all" role="tab">全部</div>
+                    <div class="tab" data-type="model" role="tab">模型</div>
+                    <div class="tab" data-type="dataset" role="tab">数据集</div>
+                </div>
             </div>
             <div id="trendingItems" class="trending-items"></div>
             <div class="button-link-container">
                 <button id="toggleButton" class="toggle-button">展开</button>
-                <a href="/models" id="moreItems" class="more-items">更多 »</a>
+                <a href="/models" id="moreItems" class="more-items">查看全部
+                    <svg class="nav-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                    </svg>
+                </a>
             </div>
         </section>
 
-        <section class="tutorial">
+        <!-- 使用教程 -->
+        <section class="container tutorial">
             <div class="tutorial-header">
-                <h2>如何使用镜像站 🌟</h2>
+                <h2>如何使用镜像站</h2>
             </div>
             <div class="instructions">
-                <blockquote>本站域名
-                    <a href="https://hf-mirror.com" target="_blank" rel="noopener">hf-mirror.com</a>，用于镜像
+                <blockquote class="callout">
+                    <strong>本站域名
+                        <a href="https://hf-mirror.com" target="_blank" rel="noopener">hf-mirror.com</a></strong>，用于镜像
                     <a href="https://huggingface.co" target="_blank" rel="noopener">huggingface.co</a>
-                    域名。作为一个公益镜像站点，致力于帮助国内AI开发者快速、稳定地下载模型、数据集。
+                    域名。作为一个公益镜像站点，致力于帮助国内 AI 开发者快速、稳定地下载模型、数据集。
                 </blockquote>
 
-                更多详细用法请看<b><a
-                        href="https://hf-mirror.com/docs/huggingface_hub/guides/download">官方下载指南</a></b>。
+                <p>更多详细用法请看 <a class="guide-link"
+                        href="https://hf-mirror.com/docs/huggingface_hub/guides/download">官方下载指南</a>。</p>
 
-                <h3>方法一：网页下载</h3>
-                <p>在本站搜索，并在模型主页的<code>Files and Version</code>中下载文件。</p>
-                <h3>方法二：hf 命令行工具</h3>
-                <p><a
-                        href="https://hf-mirror.com/docs/huggingface_hub/guides/cli"><code>hf</code>
-                    </a>是 Hugging Face 官方提供的命令行工具（原 <code>huggingface-cli</code>，2025 年起统一更名为
-                <code>hf</code>），自带完善的下载功能。</p>
-                <b>1. 安装</b><br>
-                <pre
-                    class="code-sample"><code>pip install -U huggingface_hub</code><button onclick="copyCode(this)">Copy</button></pre>
-                也可以用官方独立安装脚本（macOS/Linux）：<code>curl -LsSf https://hf.co/cli/install.sh | bash</code>，或
-                <code>brew install hf</code>。
-                <br><b>2. 设置环境变量</b>
-                <br><i>Linux</i>
-                <pre
-                    class="code-sample"><code>export HF_ENDPOINT=https://hf-mirror.com</code><button onclick="copyCode(this)">Copy</button></pre>
-                <i>Windows Powershell</i>
-                <pre
-                class="code-sample"><code>$env:HF_ENDPOINT = "https://hf-mirror.com"</code><button onclick="copyCode(this)">Copy</button></pre>
-                建议将上面这一行写入 <code>~/.bashrc</code>。
-                <br><b>3.1 下载模型</b>
-                <pre
-                    class="code-sample"><code>hf download gpt2 --local-dir gpt2</code><button onclick="copyCode(this)">Copy</button></pre>
-                <b>3.2 下载数据集</b>
-                <pre
-                    class="code-sample"><code>hf download wikitext --repo-type dataset --local-dir wikitext</code><button onclick="copyCode(this)">Copy</button></pre>
-                也可以只下载指定文件：<code>hf download gpt2 config.json model.safetensors</code>。断点续传自动进行，无需额外参数；<code>--local-dir</code>
-                下载的即是普通文件，无软链接。
-                <h3>方法三：使用环境变量（非侵入式）</h3>
-                <p>非侵入式，能解决大部分情况。huggingface 工具链会获取<code>HF_ENDPOINT</code>环境变量来确定下载文件所用的网址，所以可以使用通过设置变量来解决。
-                <pre class="code-sample"><code>HF_ENDPOINT=https://hf-mirror.com python your_script.py</code><button onclick="copyCode(this)">Copy</button>
-                </pre>
-                不过有些数据集有内置的下载脚本，那就需要手动改一下脚本内的地址来实现了。
+                <h3 class="method">方法一：网页下载</h3>
+                <p>在本站搜索，并在模型主页的 <code>Files and versions</code> 中下载文件。</p>
+
+                <h3 class="method">方法二：hf 命令行工具</h3>
+                <p><a href="https://hf-mirror.com/docs/huggingface_hub/guides/cli"><code>hf</code></a>
+                    是 Hugging Face 官方提供的命令行工具（原 <code>huggingface-cli</code>，2025 年起统一更名为
+                    <code>hf</code>），自带完善的下载功能。</p>
+
+                <p class="step-label"><b>1. 安装</b></p>
+                <pre class="code-sample" data-lang="Shell"><code>pip install -U huggingface_hub</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                <p>也可以用官方独立安装脚本（macOS/Linux）：<code>curl -LsSf https://hf.co/cli/install.sh | bash</code>，或
+                    <code>brew install hf</code>。
                 </p>
+
+                <p class="step-label"><b>2. 设置环境变量</b></p>
+                <p><i>Linux / macOS</i></p>
+                <pre class="code-sample" data-lang="Shell"><code>export HF_ENDPOINT=https://hf-mirror.com</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                <p><i>Windows PowerShell</i></p>
+                <pre class="code-sample" data-lang="PowerShell"><code>$env:HF_ENDPOINT = "https://hf-mirror.com"</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                <p>建议将上面这一行写入 <code>~/.bashrc</code>。</p>
+
+                <p class="step-label"><b>3.1 下载模型</b></p>
+                <pre class="code-sample" data-lang="Shell"><code>hf download gpt2 --local-dir gpt2</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+
+                <p class="step-label"><b>3.2 下载数据集</b></p>
+                <pre class="code-sample" data-lang="Shell"><code>hf download wikitext --repo-type dataset --local-dir wikitext</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                <p>也可以只下载指定文件：<code>hf download gpt2 config.json model.safetensors</code>。断点续传自动进行，无需额外参数；<code>--local-dir</code>
+                    下载的即是普通文件，无软链接。</p>
+
+                <h3 class="method">方法三：使用环境变量（非侵入式）</h3>
+                <p>非侵入式，能解决大部分情况。huggingface 工具链会获取 <code>HF_ENDPOINT</code>
+                    环境变量来确定下载文件所用的网址，所以可以使用通过设置变量来解决。
+                </p>
+                <pre class="code-sample" data-lang="Shell"><code>HF_ENDPOINT=https://hf-mirror.com python your_script.py</code><button
+                        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                <p>不过有些数据集有内置的下载脚本，那就需要手动改一下脚本内的地址来实现了。</p>
+
                 <div class="QA">
-                    <h2 class="QA">常见问题</h2>
-                    <h3>Q: 有些项目需要登录，如何下载？</h3>
-                    <p>
-                        <b>A</b>：部分 Gated Repo 需登录申请许可。为保障账号安全，本站不支持登录，需先前往 Hugging Face 官网登录、申请许可，在<a
-                            href="https://huggingface.co/settings/tokens" rel="noopener">官网这里获取 Access
-                            Token</a> 后回镜像站用命令行下载。<br>部分工具下载
-                        Gated Repo 的方法：
-                    </p>
-                    <b>hf download： 添加<code>--token</code>参数</b>
-                    <pre class="code-sample"><code>hf download meta-llama/Llama-3.2-1B-Instruct --token hf_*** --local-dir llama</code><button onclick="copyCode(this)">Copy</button></pre>
-                    也可以先执行 <code>hf auth login --token hf_***</code> 登录一次，或设置 <code>HF_TOKEN</code> 环境变量。其余如<code>from_pretrained</code>、<code>wget</code>、<code>curl</code>如何设置认证 token，详见上面提到的官方下载指南。
+                    <h2 class="QA-title">常见问题</h2>
+                    <details class="faq">
+                        <summary>
+                            <span class="faq-q">有些项目需要登录，如何下载？</span>
+                            <svg class="faq-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                        </summary>
+                        <div class="faq-body">
+                            <p>部分 Gated Repo 需登录申请许可。为保障账号安全，本站不支持登录，需先前往 Hugging Face 官网登录、申请许可，在<a
+                                    href="https://huggingface.co/settings/tokens" rel="noopener">官网这里获取 Access
+                                    Token</a> 后回镜像站用命令行下载。</p>
+                            <p><b>hf download：添加 <code>--token</code> 参数</b></p>
+                            <pre class="code-sample" data-lang="Shell"><code>hf download meta-llama/Llama-3.2-1B-Instruct --token hf_*** --local-dir llama</code><button
+        type="button" class="copy-btn" onclick="copyCode(this)" aria-label="复制代码">复制</button></pre>
+                            <p>也可以先执行 <code>hf auth login --token hf_***</code> 登录一次，或设置 <code>HF_TOKEN</code>
+                                环境变量。其余如 <code>from_pretrained</code>、<code>wget</code>、<code>curl</code>
+                                如何设置认证 token，详见<a class="guide-link"
+                                    href="https://hf-mirror.com/docs/huggingface_hub/guides/download">官方下载指南</a>。</p>
+                        </div>
+                    </details>
                 </div>
             </div>
-
-
-    </section>
-
+        </section>
     </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-row">
+                <a href="/" class="brand footer-brand">
+                    <span class="logo-mark" aria-hidden="true">🤗</span>
+                    <span class="brand-name">HF-Mirror</span>
+                </a>
+                <nav class="footer-links" aria-label="页脚导航">
+                    <a href="/models">模型</a>
+                    <a href="/datasets">数据集</a>
+                    <a href="/docs/huggingface_hub/guides/download">下载指南</a>
+                    <a href="https://huggingface.co" target="_blank" rel="noopener">官方站</a>
+                    <a href="https://github.com/D3-3109/hf-mirror-site" target="_blank" rel="noopener">GitHub</a>
+                </nav>
+            </div>
+            <p class="footer-note">本站为社区公益镜像，与 Hugging Face 官方无隶属关系；基于
+                <a href="https://github.com/padeoe/hf-mirror-site" target="_blank"
+                    rel="noopener">padeoe/hf-mirror-site</a> 修订部署。
+            </p>
+        </div>
+    </footer>
 
     <script src="scripts.js"></script>
 </body>

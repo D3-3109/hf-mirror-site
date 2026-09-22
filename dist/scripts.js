@@ -105,15 +105,63 @@ function openLink(url) {
 
 function copyCode(btn) {
     const code = btn.previousElementSibling.textContent;
-    navigator.clipboard.writeText(code).then(() => {
-        btn.textContent = 'Copied!';
+    const done = () => {
+        btn.classList.add('copied');
+        btn.textContent = '已复制';
         setTimeout(() => {
-            btn.textContent = 'Copy';
-        }, 2000);
-    });
+            btn.classList.remove('copied');
+            btn.textContent = '复制';
+        }, 1600);
+    };
+    // 部分内置 WebView 限制 async Clipboard API，降级到 execCommand
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(code).then(done, () => fallbackCopy(code, done));
+    } else {
+        fallbackCopy(code, done);
+    }
+}
+
+function fallbackCopy(text, done) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+    } catch (e) { /* ignore */ }
+    document.body.removeChild(ta);
+    done();
 }
 
 
+
+// ---------- 吸顶栏滚动状态 / “/” 快捷键 / 热门标签 ----------
+document.addEventListener('DOMContentLoaded', function () {
+    const siteHeader = document.getElementById('siteHeader');
+    if (siteHeader) {
+        const onScroll = () => siteHeader.classList.toggle('scrolled', window.scrollY > 4);
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key !== '/' || event.metaKey || event.ctrlKey || event.altKey) return;
+        const target = event.target;
+        if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' ||
+            target.isContentEditable)) return;
+        event.preventDefault();
+        searchInput.focus();
+    });
+
+    document.querySelectorAll('.hero-tags button[data-q]').forEach(btn => {
+        btn.addEventListener('click', function () {
+            searchInput.value = this.dataset.q;
+            searchModel();
+        });
+    });
+});
 
 // 教程文案与代码示例中的镜像域名动态本地化：
 // 部署在任意域名下，示例中的 HF_ENDPOINT 都指向当前站点。
@@ -348,7 +396,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         return `
             <div class="repo-content">
-                <div class="item-rank">#${index + 1}</div>
+                <div class="item-rank">${index + 1}</div>
                 ${logoHTML}
                 <div class="item-info">
                     <a class= "repo-link" href="${repoLink}">
