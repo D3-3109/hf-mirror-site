@@ -4,80 +4,226 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>警告</title>
+  <title>访问受限</title>
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#fbfbfc" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
   <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #fbfbfc;
+      --card: #ffffff;
+      --text: #1c2128;
+      --text-secondary: #59636e;
+      --text-tertiary: #818b98;
+      --border: rgba(27, 31, 36, 0.10);
+      --border-strong: rgba(27, 31, 36, 0.20);
+      --accent: #0b68f0;
+      --accent-hover: #095bd1;
+      --accent-soft: rgba(11, 104, 240, 0.09);
+      --warn-text: #b45309;
+      --warn-bg: rgba(245, 158, 11, 0.14);
+      --warn-border: rgba(245, 158, 11, 0.30);
+      --glow: rgba(245, 158, 11, 0.06);
+      --shadow-lg: 0 4px 8px rgba(27, 31, 36, 0.04), 0 16px 48px rgba(27, 31, 36, 0.14);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --card: #161b22;
+        --text: #e6edf3;
+        --text-secondary: #9198a1;
+        --text-tertiary: #6e7681;
+        --border: rgba(230, 237, 243, 0.12);
+        --border-strong: rgba(230, 237, 243, 0.26);
+        --accent: #4493f8;
+        --accent-hover: #6ba4fb;
+        --accent-soft: rgba(68, 147, 248, 0.13);
+        --warn-text: #fbbf24;
+        --warn-bg: rgba(245, 158, 11, 0.12);
+        --warn-border: rgba(245, 158, 11, 0.28);
+        --glow: rgba(245, 158, 11, 0.05);
+        --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.3), 0 16px 48px rgba(0, 0, 0, 0.55);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
+      font-family: var(--font-sans);
       margin: 0;
-      padding: 0;
-      background-color: #f4f4f4;
+      padding: 0 20px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background:
+        radial-gradient(560px 260px at 50% 0%, var(--glow), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    .warning-box {
-      background-color: #fff;
-      border: 1px solid #e1e1e1;
-      border-radius: 5px;
-      padding: 20px;
-      margin-top: 50px;
+    .card {
+      width: 100%;
+      max-width: 460px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      box-shadow: var(--shadow-lg);
+      padding: 40px 36px 32px;
       text-align: center;
+      animation: card-in 320ms cubic-bezier(0.23, 1, 0.32, 1) backwards;
     }
 
-    .warning-box h1 {
-      color: #007bff;
+    @keyframes card-in {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.98);
+      }
     }
 
-    .warning-box p {
-      color: #555;
+    .icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-border);
+      color: var(--warn-text);
+      margin-bottom: 20px;
     }
 
-    .link-container {
-      margin-top: 20px;
+    .icon svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .card p {
+      margin: 0 0 8px;
+      font-size: 14.5px;
+      line-height: 1.75;
+      color: var(--text-secondary);
+      text-wrap: pretty;
+    }
+
+    .domain-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin: 16px 0 20px;
+      padding: 7px 16px;
+      font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-soft);
+      border: 1px solid transparent;
+      border-radius: 999px;
+      text-decoration: none;
+      transition: color 120ms ease, border-color 120ms ease;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .domain-chip:hover {
+        color: var(--accent-hover);
+        border-color: var(--accent);
+        text-decoration: none;
+      }
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0 18px;
     }
 
     .link {
-      display: inline-block;
-      background-color: #007bff;
-      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 14px;
+      font-weight: 550;
+      color: var(--accent);
+      background: none;
       border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
       text-decoration: none;
-      font-weight: bold;
-      margin-top: 10px;
+      transition: background-color 120ms ease, transform 120ms cubic-bezier(0.23, 1, 0.32, 1);
     }
 
-    .domain {
-      font-size: 1.5em;
-      color: #007bff;
-      font-weight: bold;
-      text-decoration: none;
+    @media (hover: hover) and (pointer: fine) {
+      .link:hover {
+        background: var(--accent-soft);
+        text-decoration: none;
+      }
+    }
+
+    .link:active {
+      transform: scale(0.97);
+    }
+
+    .link svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card {
+        animation: none;
+      }
+
+      .link:active {
+        transform: none;
+      }
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <div class="warning-box">
-      <h1>警告：未授权访问</h1>
-      <p>看起来您是通过外部链接或未授权的网站访问到此页面的。出于安全原因，我们限制了对此内容的访问。</p>
-      <p>如果您认为错误地访问到此页面，请联系我们的支持团队或访问我们的官方网站：</p>
-      <div class="link-container">
-        <a href="/" class="domain" id="domainLink">镜像站首页</a>
-        <br>
-        <a href="/" class="link">点击这里返回</a>
-      </div>
-    </div>
-    <script>
-      // 域名无关：任意域名部署都指向本站
-      document.getElementById('domainLink').textContent = location.hostname;
-    </script>
+  <div class="card">
+    <span class="icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+        <line x1="12" y1="9" x2="12" y2="13" />
+        <line x1="12" y1="17" x2="12.01" y2="17" />
+      </svg>
+    </span>
+    <h1>访问受限</h1>
+    <p>看起来您是通过外部链接或未授权的网站访问到此页面。出于安全原因，我们限制了对该内容的访问。</p>
+    <p>如果您认为这是误判，请前往镜像站首页继续使用：</p>
+    <a href="/" class="domain-chip" id="domainLink">镜像站首页</a>
+    <div class="divider"></div>
+    <a href="/" class="link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12" />
+        <polyline points="12 19 5 12 12 5" />
+      </svg>
+      返回首页
+    </a>
   </div>
+  <script>
+    // 域名无关：任意域名部署都指向本站
+    document.getElementById('domainLink').textContent = location.hostname;
+  </script>
 </body>
 
 </html>
